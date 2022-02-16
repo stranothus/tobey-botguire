@@ -1,62 +1,45 @@
-import fs from "fs";
-import emotional from "emotional";
+import dirFlat from "dirflat";
 
-await new Promise((resolve, reject) => emotional.load(() => resolve(true)));
+const prefix = "Tobey";
 
-const spiderManQuotes = [
-    ...JSON.parse(await fs.promises.readFile("./src/resources/spider_man_1.json", "utf-8")),
-    ...JSON.parse(await fs.promises.readFile("./src/resources/spider_man_2.json", "utf-8")),
-    ...JSON.parse(await fs.promises.readFile("./src/resources/spider_man_3.json", "utf-8"))
-].map(quote => ({
-    quote: quote,
-    ...emotional.get(quote)
-}));
+const commands = {
+    ...Object.assign({}, ...await dirFlat("./src/commands").then(async commands => 
+        await Promise.all(
+            commands.map(async command => {
+                const data = await import("../." + command);
+                const obj = {
+                    [data.default.name]: data.default.execute,
+                    ...Object.assign({}, ...data.default.aliases.map(alias => ({
+                        [alias]: data.default.execute
+                    })))
+                };
+
+                return obj;
+            })
+        )
+    ))
+};
 
 export default {
     name: "messageCreate",
     execute: msg => {
-        if(msg.author.bot) return;
+        if(msg.author.bot || !msg.guild) return;
 
-        const sentiment = emotional.get(msg.content);
-        let bestQuote = sentiment.assessments.length ? [...spiderManQuotes].sort((a, b) => {
-            let scoreA =  Math.random() * a.quote.split(/\s+/).length / 3;
-            let scoreB =  Math.random() * b.quote.split(/\s+/).length / 3;
-    
-            sentiment.assessments.forEach(v => {
-                v[0].forEach(e => {
-                    e = e.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-    
-                    if(a.quote.match(new RegExp(e, "gi"))) scoreA += v[1] + v[2];
-                    if(b.quote.match(new RegExp(e, "gi"))) scoreB += v[1] + v[2];
-    
-                    a.assessments.forEach(o => o[0].forEach(u => e === u ? scoreA += o[1] + o[2] : null));
-                    b.assessments.forEach(o => o[0].forEach(u => e === u ? scoreB += o[1] + o[2] : null));
-                });
-            });
-    
-            scoreA /= a.quote.split(/\s+/).length / 3;
-            scoreB /= b.quote.split(/\s+/).length / 3;
-    
-            return scoreB - scoreA;
-        }) : [...spiderManQuotes].sort((a, b) => {
-            let scoreA =  Math.random() * a.quote.split(/\s+/).length / 3;
-            let scoreB =  Math.random() * b.quote.split(/\s+/).length / 3;
-    
-            msg.content.split(/\s+/).map(v => {
-                v = v.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-                    
-                if(a.quote.match(new RegExp(v, "gi"))) scoreA += Math.random();
-                if(b.quote.match(new RegExp(v, "gi"))) scoreB += Math.random();
-            });
-    
-            scoreA /= a.quote.split(/\s+/).length / 3;
-            scoreB /= b.quote.split(/\s+/).length / 3;
-    
-            return scoreB - scoreA;
-        });
-    
-        if(bestQuote[0] === spiderManQuotes[0]) bestQuote[0] = spiderManQuotes[Math.floor(Math.random() * spiderManQuotes.length)];
-    
-        msg.channel.send(bestQuote[0].quote);
+        if(msg.content.toLowerCase().startsWith(prefix.toLowerCase())) {
+            msg.content = msg.content.replace(new RegExp("^" + prefix), "");
+        } else if(msg.content.startsWith(`<@!${msg.client.user.id}>`)) {
+            msg.content = msg.content.replace(new RegExp(`^<@!${msg.client.user.id}>\\s*`), "");
+        } else {
+            return;
+        }
+        
+        let args = msg.content.split(/("[^"]*")|\s+/).filter(v => v).map(v => v.replace(/(?:\"$|^\")/g, ""));
+        const commandName = args[0].toLowerCase();
+        args.splice(0, 1);
+        const command = commands[commandName];
+
+        if(!command) return;
+
+        command(msg, args);
     }
 };
