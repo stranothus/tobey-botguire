@@ -1,4 +1,5 @@
 import dirFlat from "dirflat";
+import tobeyTalk from "../tobeyTalk.js";
 
 const prefix = "Tobey";
 
@@ -22,7 +23,7 @@ const commands = {
 
 export default {
     name: "messageCreate",
-    execute: msg => {
+    execute: async msg => {
         if(msg.author.bot || !msg.guild) return;
 
         if(msg.content.toLowerCase().startsWith(prefix.toLowerCase())) {
@@ -30,7 +31,11 @@ export default {
         } else if(msg.content.startsWith(`<@!${msg.client.user.id}>`)) {
             msg.content = msg.content.replace(new RegExp(`^<@!${msg.client.user.id}>\\s*`), "");
         } else {
-            return;
+            const user = await db.db("Bot").collection("Users").findOne({ id: msg.author.id });
+
+            if(!user || !user.tobeyTalking || user.tobeyTalking !== msg.channel.id + "|" + msg.guild.id) return;
+
+            tobeyTalk(msg);
         }
         
         let args = msg.content.split(/("[^"]*")|\s+/).filter(v => v).map(v => v.replace(/(?:\"$|^\")/g, ""));

@@ -53,7 +53,7 @@ function tobeyTalk(msg) {
 
     if(bestQuote[0] === spiderManQuotes[0]) bestQuote[0] = spiderManQuotes[Math.floor(Math.random() * spiderManQuotes.length)];
 
-    msg.channel.send(bestQuote[0].quote);
+    msg.reply(bestQuote[0].quote);
 }
 
 export default tobeyTalk;
