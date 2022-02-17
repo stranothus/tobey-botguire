@@ -1,4 +1,5 @@
 import tobeyTalk from "../tobeyTalk.js";
+import userExists from "../userExists.js";
 
 export default {
     name: "talk",
@@ -6,7 +7,9 @@ export default {
         "chat"
     ],
     execute: async (msg, args) => {
-        await db.db("Bot").collection("Users").updateOne({ id: msg.author.id }, { $set: { id: msg.author.id, tobeyTalking: msg.channel.id + "|" + msg.guild.id }}, { upsert: true });
+        await userExists(msg.author.id);
+        
+        await db.db("Bot").collection("Users").updateOne({ id: msg.author.id }, { $set: { "items.0": msg.channel.id + "|" + msg.guild.id }});
 
         tobeyTalk(msg);
     }

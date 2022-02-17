@@ -33,7 +33,7 @@ export default {
         } else {
             const user = await db.db("Bot").collection("Users").findOne({ id: msg.author.id });
 
-            if(!user || !user.tobeyTalking || user.tobeyTalking !== msg.channel.id + "|" + msg.guild.id) return;
+            if(!user || !user.items || !user.items[0] || user.items[0] !== msg.channel.id + "|" + msg.guild.id) return;
 
             tobeyTalk(msg);
         }
