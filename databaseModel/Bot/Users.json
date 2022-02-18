@@ -3,7 +3,9 @@
         "id": "int",
         "items": [
             "tobey talk string \"channelId|guildId\"",
-            "money int"
+            "money int",
+            "job where 0 is joe's pizza, 1 is the bugle, and 2 is pizza yurt",
+            "next time you can work"
         ]
     }
 ]
