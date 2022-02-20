@@ -52,20 +52,19 @@ export default {
         collector.on('end', async collected => {
             if(!selected) selected = { customId: 0 };
             const payment = 8;
+            const tip = Math.floor(Math.random() * 5);
 
             buttons.components.forEach(v => v.setDisabled(true));
 
             switch(selected.customId) {
                 case "1":
                     if(possibility(90)) {
-                        const tip = Math.floor(Math.random() * 10);
-
                         selected.update({
-                            content: `Nobody but SpiderMan could deliver a pizza that fast! You get an extra large tip of ${tip} as well as your hourly rate (${payment}).`,
+                            content: `Nobody but SpiderMan could deliver a pizza that fast! You get an extra large tip of ${tip + 5} as well as your hourly rate (${payment}).`,
                             components: [buttons]
                         });
                         await db.db("Bot").collection("Users").updateOne({ id: msg.author.id }, { $inc: {
-                            "items.1": payment
+                            "items.1": payment + tip + 5
                         }});
 
                         // add possibility of getting a special item from running?
@@ -89,8 +88,6 @@ export default {
                 break;
                 case "3":
                     if(possibility(95)) {
-                        const tip = Math.floor(Math.random() * 5);
-
                         selected.update({
                             content: `You delivered the pizzas on time with time to spare and got a tip of ${tip} as well as your normal hourly rate at Joe's Pizza (${payment}).`,
                             components: [buttons]

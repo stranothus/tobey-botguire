@@ -28,11 +28,16 @@ async function parseUser(id) {
 
     const user = await db.db("Bot").collection("Users").findOne({ id: id });
     const timeUntilWork = user.items[3] - Date.now() < 0 ? 0 : user.items[3] - Date.now();
+    const timeUntilFreelance = user.items[4] - Date.now() < 0 ? 0 : user.items[4] - Date.now();
 
     return {
         id: user.id,
         tobeyTalk: user.items[0],
         currency: user.items[1],
+        freelance: {
+            timeUntil: timeUntilFreelance,
+            readableTimeUntil: timeUntilFreelance > 0 ? timeUntilFreelance > 60 * 60 * 1000 ? `${Math.floor(timeUntilFreelance / (60 * 60 * 1000))} hours` : timeUntilFreelance > 60 * 1000 ? `${Math.floor(timeUntilFreelance / (60 * 1000))} minutes` : `${Math.floor(timeUntilFreelance / 1000)} seconds` : `0 time units`
+        },
         job: {
             id: user.items[2],
             timeUntilWork: timeUntilWork,
